@@ -22,10 +22,6 @@ asyncpg==0.29.0
 alembic==1.13.1
 psycopg2-binary==2.9.9
 
-# Kafka
-confluent-kafka==2.4.0
-aiokafka==0.10.0
-
 # FHIR
 fhir.resources==7.1.0
 
