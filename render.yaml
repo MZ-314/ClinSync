@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: clinsync-backend
+    runtime: python
+    region: singapore
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        sync: false          # set manually in Render dashboard
+      - key: DATABASE_URL
+        sync: false          # NeonDB URL — set in dashboard
+      - key: GROQ_API_KEY
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        value: llama-3.3-70b-versatile
+      - key: USE_KAFKA
+        value: "false"
+      - key: HAPI_FHIR_URL
+        value: https://hapi.fhir.org/baseR4
+      - key: AUDIO_UPLOAD_DIR
+        value: /tmp/clinsync_audio
+      - key: LANGSMITH_TRACING
+        value: "true"
+      - key: LANGSMITH_API_KEY
+        sync: false
+      - key: LANGSMITH_PROJECT
+        value: clinsync
+      - key: CORS_ORIGINS
+        sync: false          # set to your Vercel frontend URL e.g. https://clinsync.vercel.app
+      - key: JWT_EXPIRE_MINUTES
+        value: "480"
