@@ -4,33 +4,36 @@ Entry point for the FastAPI backend.
 """
 
 import asyncio
+import os
 from contextlib import asynccontextmanager
 
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import health, consultations, fhir, approvals, auth
+from app.api import health, consultations, fhir, approvals
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.core.database import create_all_tables
-from app.kafka.producer import kafka_producer
-from app.api import health, consultations, fhir, approvals, auth
-
 
 logger = structlog.get_logger(__name__)
 
 _consumer_task: asyncio.Task | None = None
+USE_KAFKA = os.getenv("USE_KAFKA", "true").lower() == "true"
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _consumer_task
+
     configure_logging()
-    logger.info("ClinSync backend starting", env=settings.ENVIRONMENT)
+    logger.info("ClinSync backend starting", env=settings.ENVIRONMENT, kafka=USE_KAFKA)
+
     await create_all_tables()
     logger.info("Database tables ready")
 
-    if settings.USE_KAFKA:
+    if USE_KAFKA:
+        from app.kafka.producer import kafka_producer
         try:
             await kafka_producer.start()
             logger.info("Kafka producer connected")
@@ -44,63 +47,45 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning("Kafka consumer failed to start", error=str(e))
     else:
-        logger.info(
-            "Kafka disabled (USE_KAFKA=false) — pipeline will run in-process via BackgroundTasks"
-        )
+        logger.info("Kafka disabled — running in direct pipeline mode")
 
     yield
 
     if _consumer_task:
         _consumer_task.cancel()
-    if settings.USE_KAFKA:
         try:
+            await _consumer_task
+        except asyncio.CancelledError:
+            pass
+
+    if USE_KAFKA:
+        try:
+            from app.kafka.producer import kafka_producer
             await kafka_producer.stop()
         except Exception:
             pass
+
     logger.info("ClinSync backend shutting down")
 
-# 1. Create the App FIRST
+
 app = FastAPI(
     title="ClinSync API",
+    description="AI-Powered Clinical Documentation & FHIR Automation System",
+    version="0.1.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
     lifespan=lifespan,
 )
 
-# 2. Define allowed origins
-# Local dev defaults cover Vite (5173), the old static frontend (5500),
-# and the docker-compose frontend (3000). Production URLs come from
-# settings.CORS_ORIGINS (.env).
-origins = [
-    "http://127.0.0.1:3000",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    "http://localhost:5173",
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
-]
-
-# Add Render / Vercel URLs from CORS_ORIGINS env var if set.
-if settings.CORS_ORIGINS:
-    if isinstance(settings.CORS_ORIGINS, list):
-        origins.extend(settings.CORS_ORIGINS)
-    else:
-        origins.append(settings.CORS_ORIGINS)
-
-# Deduplicate while preserving order.
-origins = list(dict.fromkeys(origins))
-
-# 3. Add Middleware SECOND
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"], # Crucial for some browsers to read the response
 )
 
-# 4. Include Routers LAST
 app.include_router(health.router, tags=["Health"])
 app.include_router(consultations.router, prefix="/api/v1/consultations", tags=["Consultations"])
 app.include_router(fhir.router, prefix="/api/v1/fhir", tags=["FHIR"])
 app.include_router(approvals.router, prefix="/api/v1/approvals", tags=["Approvals"])
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])

@@ -9,9 +9,6 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     SECRET_KEY: str = "change-me-in-production"
 
-    # JWT
-    JWT_EXPIRE_MINUTES: int = 60 * 8  # 8 hours — sensible for a clinical shift
-
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://clinsync:clinsync_secret@postgres:5432/clinsync_db"
 
@@ -23,10 +20,6 @@ class Settings(BaseSettings):
     DEEPGRAM_API_KEY: str = ""
 
     # Kafka
-    # Set USE_KAFKA=false on Render (no broker available) — pipeline will run
-    # in-process via FastAPI BackgroundTasks instead. Local docker-compose keeps
-    # Kafka enabled by default.
-    USE_KAFKA: bool = True
     KAFKA_BOOTSTRAP_SERVERS: str = "kafka:9092"
     KAFKA_TOPIC_TRANSCRIPTION: str = "clinsync.transcription"
     KAFKA_TOPIC_EXTRACTION: str = "clinsync.extraction"
@@ -36,17 +29,20 @@ class Settings(BaseSettings):
     # FHIR
     HAPI_FHIR_URL: str = "http://hapi-fhir:8080/fhir"
 
-    # Audio storage
-    # On Render the filesystem is ephemeral; for production use object storage.
-    AUDIO_UPLOAD_DIR: str = "/tmp/clinsync_audio"
-
-    # CORS — override in .env for Render deployment
-    # e.g. CORS_ORIGINS=["https://your-app.onrender.com"]
+    # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
-    # LangSmith (observability)
+    # LangSmith
+    LANGCHAIN_TRACING_V2: bool = False
+    LANGCHAIN_API_KEY: str = ""
+    LANGCHAIN_PROJECT: str = "clinsync"
+    # Aliases used by render.yaml
     LANGSMITH_TRACING: bool = False
     LANGSMITH_API_KEY: str = ""
     LANGSMITH_PROJECT: str = "clinsync"
+
+    # Security
+    JWT_EXPIRE_MINUTES: int = 480
+
 
 settings = Settings()
