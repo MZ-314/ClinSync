@@ -1,0 +1,47 @@
+# Web framework
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9
+
+# LangChain / LangGraph
+langchain==0.2.5
+langchain-groq==0.1.6
+langchain-community==0.2.5
+langgraph==0.1.5
+langsmith==0.1.75
+
+# LLM providers
+groq==0.9.0
+
+# Speech-to-text
+deepgram-sdk==3.2.7
+
+# Database — use psycopg2-binary (pre-built) instead of asyncpg
+sqlalchemy==2.0.30
+psycopg2-binary==2.9.9
+alembic==1.13.1
+
+# NOTE: asyncpg and confluent-kafka omitted for Render
+# asyncpg requires gcc/libpq-dev to build from source
+# confluent-kafka requires libsasl2-dev/libssl-dev
+# On Render free tier, use psycopg2-binary + no Kafka (USE_KAFKA=false)
+
+# FHIR
+fhir.resources==7.1.0
+
+# HTTP client
+httpx==0.27.0
+aiohttp==3.9.5
+
+# Data validation
+pydantic==2.7.3
+pydantic-settings==2.3.1
+
+# Utilities
+python-dotenv==1.0.1
+tenacity==8.3.0
+structlog==24.2.0
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4

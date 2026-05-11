@@ -5,16 +5,16 @@ services:
     region: singapore
     plan: free
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements-prod.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: ENVIRONMENT
         value: production
       - key: SECRET_KEY
-        sync: false          # set manually in Render dashboard
+        sync: false
       - key: DATABASE_URL
-        sync: false          # NeonDB URL — set in dashboard
+        sync: false
       - key: GROQ_API_KEY
         sync: false
       - key: DEEPGRAM_API_KEY
@@ -25,8 +25,6 @@ services:
         value: "false"
       - key: HAPI_FHIR_URL
         value: https://hapi.fhir.org/baseR4
-      - key: AUDIO_UPLOAD_DIR
-        value: /tmp/clinsync_audio
       - key: LANGSMITH_TRACING
         value: "true"
       - key: LANGSMITH_API_KEY
@@ -34,6 +32,6 @@ services:
       - key: LANGSMITH_PROJECT
         value: clinsync
       - key: CORS_ORIGINS
-        sync: false          # set to your Vercel frontend URL e.g. https://clinsync.vercel.app
+        sync: false
       - key: JWT_EXPIRE_MINUTES
         value: "480"
