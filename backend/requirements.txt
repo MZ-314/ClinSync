@@ -18,9 +18,9 @@ deepgram-sdk==3.2.7
 
 # Database
 sqlalchemy==2.0.30
-asyncpg==0.29.0
 alembic==1.13.1
 psycopg2-binary==2.9.9
+
 
 # FHIR
 fhir.resources==7.1.0
